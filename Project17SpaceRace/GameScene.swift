@@ -66,28 +66,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     @objc func createEnemy() {
-        if enemyCount < 20 {
-            guard let enemy = possibleEnemies.randomElement() else { return }
-            let sprite = SKSpriteNode(imageNamed: enemy)
-            sprite.position = CGPoint(x: 1200, y: CGFloat.random(in: 50...736))
-            addChild(sprite)
-            
-            sprite.physicsBody = SKPhysicsBody(texture: sprite.texture!, size: sprite.size)
-            sprite.physicsBody?.categoryBitMask = 1
-            sprite.physicsBody?.velocity = CGVector(dx: -500, dy: 0)
-            // 角速度, 角阻尼, 線阻尼，代表他的旋轉及移動速度不會收到阻尼影響(=0)
-            sprite.physicsBody?.angularVelocity = 5
-            sprite.physicsBody?.angularDamping = 0
-            sprite.physicsBody?.linearDamping = 0
-            
-            enemyCount += 1
-        } else {
+        guard !isGameOver else { return }
+        
+        guard let enemy = possibleEnemies.randomElement() else { return }
+        let sprite = SKSpriteNode(imageNamed: enemy)
+        sprite.position = CGPoint(x: 1200, y: CGFloat.random(in: 50...736))
+        addChild(sprite)
+        
+        sprite.physicsBody = SKPhysicsBody(texture: sprite.texture!, size: sprite.size)
+        sprite.physicsBody?.categoryBitMask = 1
+        sprite.physicsBody?.velocity = CGVector(dx: -500, dy: 0)
+        // 角速度, 角阻尼, 線阻尼，代表他的旋轉及移動速度不會收到阻尼影響(=0)
+        sprite.physicsBody?.angularVelocity = 5
+        sprite.physicsBody?.angularDamping = 0
+        sprite.physicsBody?.linearDamping = 0
+        
+        enemyCount += 1
+        
+        if enemyCount >= 20 {
             enemyCount = 0
             timeInterval -= 0.1
             gameTimer?.invalidate()
             gameTimer = Timer.scheduledTimer(timeInterval: timeInterval, target: self, selector: #selector(createEnemy), userInfo: nil, repeats: true)
         }
-        
     }
     
     override func update(_ currentTime: TimeInterval) {
@@ -100,17 +101,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 沒失敗就會一直增加分數
         if !isGameOver {
             score += 1
-        } else {
-            gameTimer?.invalidate()
-            gameOver.isHidden = false
-            scoreLabel.isHidden = true
-            
-            finalScore = SKLabelNode(fontNamed: "Chalkduster")
-            finalScore.text = "Final score: \(score)"
-            finalScore.position = CGPoint(x: 0, y: -80)
-            finalScore.fontSize = 48
-            finalScore.horizontalAlignmentMode = .center
-            gameOver.addChild(finalScore)
         }
     }
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -148,5 +138,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.removeFromParent()
         
         isGameOver = true
+        gameTimer?.invalidate()
+        
+        gameOver.isHidden = false
+        scoreLabel.isHidden = true
+        
+        finalScore = SKLabelNode(fontNamed: "Chalkduster")
+        finalScore.text = "Final score: \(score)"
+        finalScore.position = CGPoint(x: 0, y: -80)
+        finalScore.fontSize = 48
+        finalScore.horizontalAlignmentMode = .center
+        gameOver.addChild(finalScore)
     }
 }
